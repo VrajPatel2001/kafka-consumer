@@ -1,0 +1,140 @@
+# version: '3.4'
+
+# services:
+#   zookeeper:
+#     image: confluentinc/cp-zookeeper:latest
+#     container_name: zookeeper
+#     environment:
+#       ZOOKEEPER_CLIENT_PORT: 2181
+#       ZOOKEEPER_TICK_TIME: 2000
+#     ports:
+#       - "2181:2181"
+#     networks:
+#       - kafka-network
+
+#   kafka:
+#     image: confluentinc/cp-kafka:latest
+#     hostname: kafka
+#     ports:
+#       - "19092:19092"
+#     depends_on:
+#       - zookeeper
+#     environment:
+#       KAFKA_BROKER_ID: 1
+#       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+#       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+#       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:19092
+#       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+#     networks:
+#       - kafka-network
+
+#   consumer:
+#     image: vrajpatel99/kafka-consumer:0.1
+#     ports:
+#       - 8002:8002
+#     environment:
+#       SERVER_PORT: 8002
+#       SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS: "kafka:19092"
+#       SPRING_KAFKA_PRODUCER_KEY_DESERIALIZER: org.apache.kafka.common.serialization.StringSerializer
+#       SPRING_KAFKA_PRODUCER_VALUE_DESERIALIZER: org.springframework.kafka.support.serializer.JsonSerializer
+#       GROUP_ID: group-1
+#     networks:
+#       - kafka-network
+#     depends_on:
+#       - kafka
+    
+#   producer:
+#     image: vrajpatel99/kafka-producer:0.1
+#     ports:
+#       - 8001:8001
+#     environment:
+#       SERVER_PORT: 8001
+#       SPRING_DATASOURCE_URL: jdbc:h2:mem:testdb
+#       SPRING_DATASOURCE_USERNAME: sa
+#       SPRING_DATASOURCE_PASSWORD: password
+#       SPRING_DATASOURCE_DRIVER: org.h2.Driver
+#       SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS: "kafka:19092"
+#       SPRING_KAFKA_PRODUCER_KEY_SERIALIZER: org.apache.kafka.common.serialization.StringSerializer
+#       SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: org.springframework.kafka.support.serializer.JsonSerializer
+#     networks:
+#       - kafka-network
+#     depends_on:
+#       - kafka
+  
+# networks:
+#   kafka-network:
+#     driver: bridge
+
+
+version: '3.7'
+
+services:
+  zookeeper:
+    restart: always
+    image: docker.io/bitnami/zookeeper:3.8
+    ports:
+      - "2181:2181"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - kafka-network
+  
+  kafka:
+    restart: always
+    image: docker.io/bitnami/kafka:3.3
+    ports:
+      - "9094:9094"
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_CFG_ZOOKEEPER_METADATA_MIGRATION_ENABLE=yes
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@localhost:9093
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_KAFKA_CREATE_TOPICS="user-created"
+    depends_on:
+      - zookeeper
+    networks:
+      - kafka-network
+
+  # consumer:
+  #   image: vrajpatel99/kafka-consumer:0.1
+  #   ports:
+  #     - "8002:8002"
+  #   environment:
+  #     - SERVER_PORT=8002
+  #     - SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS="kafka:9092"
+  #     - SPRING_KAFKA_PRODUCER_KEY_DESERIALIZER:org.apache.kafka.common.serialization.StringSerializer
+  #     - SPRING_KAFKA_PRODUCER_VALUE_DESERIALIZER:org.springframework.kafka.support.serializer.JsonSerializer
+  #     - GROUP_ID=group-1
+  #   depends_on:
+  #     - kafka
+  #   networks:
+  #     - kafka-network
+
+  # producer:
+  #   image: vrajpatel99/kafka-producer:0.1
+  #   ports:
+  #     - "8001:8001"
+  #   environment:
+  #     - SERVER_PORT=8001
+  #     - SPRING_DATASOURCE_URL=jdbc:h2:mem:testdb
+  #     - SPRING_DATASOURCE_USERNAME=sa
+  #     - SPRING_DATASOURCE_PASSWORD=password
+  #     - SPRING_DATASOURCE_DRIVER=org.h2.Driver
+  #     - SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS="kafka:9092"
+  #     - SPRING_KAFKA_PRODUCER_KEY_SERIALIZER=org.apache.kafka.common.serialization.StringSerializer
+  #     - SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER=org.springframework.kafka.support.serializer.JsonSerializer
+  #   depends_on:
+  #     - kafka
+  #   networks:
+  #     - kafka-network
+
+networks:
+  kafka-network:
+    driver: bridge
