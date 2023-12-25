@@ -102,38 +102,40 @@ services:
     networks:
       - kafka-network
 
-  # consumer:
-  #   image: vrajpatel99/kafka-consumer:0.1
-  #   ports:
-  #     - "8002:8002"
-  #   environment:
-  #     - SERVER_PORT=8002
-  #     - SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS="kafka:9092"
-  #     - SPRING_KAFKA_PRODUCER_KEY_DESERIALIZER:org.apache.kafka.common.serialization.StringSerializer
-  #     - SPRING_KAFKA_PRODUCER_VALUE_DESERIALIZER:org.springframework.kafka.support.serializer.JsonSerializer
-  #     - GROUP_ID=group-1
-  #   depends_on:
-  #     - kafka
-  #   networks:
-  #     - kafka-network
+  consumer:
+    image: vrajpatel99/kafka-consumer:0.1
+    ports:
+      - "8002:8002"
+    environment:
+      - SERVER_PORT=8002
+      - SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS=localhost:9094
+      - SPRING_KAFKA_PRODUCER_KEY_DESERIALIZER=org.apache.kafka.common.serialization.StringDeserializer
+      - SPRING_KAFKA_PRODUCER_VALUE_DESERIALIZER=org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      - SPRING_KAFKA_CONSUMER_PROPERTIES_SPRING_DESERIALIZER_KEY_DELEGATE_CLASS=org.apache.kafka.common.serialization.StringDeserializer
+      - SPRING_KAFKA_CONSUMER_PROPERTIES_SPRING_DESERIALIZER_VALUE_DELEGATE_CLASS=org.springframework.kafka.support.serializer.JsonDeserializer
+      - GROUP_ID=group-1
+    depends_on:
+      - kafka
+    networks:
+      - kafka-network
 
-  # producer:
-  #   image: vrajpatel99/kafka-producer:0.1
-  #   ports:
-  #     - "8001:8001"
-  #   environment:
-  #     - SERVER_PORT=8001
-  #     - SPRING_DATASOURCE_URL=jdbc:h2:mem:testdb
-  #     - SPRING_DATASOURCE_USERNAME=sa
-  #     - SPRING_DATASOURCE_PASSWORD=password
-  #     - SPRING_DATASOURCE_DRIVER=org.h2.Driver
-  #     - SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS="kafka:9092"
-  #     - SPRING_KAFKA_PRODUCER_KEY_SERIALIZER=org.apache.kafka.common.serialization.StringSerializer
-  #     - SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER=org.springframework.kafka.support.serializer.JsonSerializer
-  #   depends_on:
-  #     - kafka
-  #   networks:
-  #     - kafka-network
+  producer:
+    image: vrajpatel99/kafka-producer:0.1
+    ports:
+      - "8001:8001"
+    environment:
+      - SERVER_PORT=8001
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:testdb
+      - SPRING_DATASOURCE_USERNAME=sa
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_DATASOURCE_DRIVER=org.h2.Driver
+      - SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS=localhost:9094
+      - SPRING_KAFKA_PRODUCER_KEY_SERIALIZER=org.apache.kafka.common.serialization.StringSerializer
+      - SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER=org.springframework.kafka.support.serializer.JsonSerializer
+    depends_on:
+      - kafka
+    networks:
+      - kafka-network
 
 networks:
   kafka-network:
